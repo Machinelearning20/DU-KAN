@@ -9,6 +9,7 @@ pip install -r requirements.txt
 The resulted file structure is as follows.
 ```
 
+```
 ├── inputs
 │   ├── busi
 │     ├── images
