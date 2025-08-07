@@ -9,6 +9,8 @@ from torchvision.utils import save_image
 import torch.nn.functional as F
 import os
 import matplotlib.pyplot as plt
+
+from kanlayer import MoKLayer
 from utils import *
 __all__ = ['DUKAN']
 import timm
@@ -29,53 +31,12 @@ class KANLayer(nn.Module):
         out_features = out_features or in_features
         hidden_features = hidden_features or in_features
         self.dim = in_features
-
-        grid_size = 5
-        spline_order = 3
-        scale_noise = 0.1
-        scale_base = 1.0
-        scale_spline = 1.0
-        base_activation = torch.nn.SiLU
-        grid_eps = 0.02
-        grid_range = [-1, 1]
-
+        layer_hp = [['TaylorKAN', 4], ['TaylorKAN', 4], ['KANLinear', 4], ['KANLinear', 4]]
         if not no_kan:
-            self.fc1 = KANLinear(
-                in_features,
-                hidden_features,
-                grid_size=grid_size,
-                spline_order=spline_order,
-                scale_noise=scale_noise,
-                scale_base=scale_base,
-                scale_spline=scale_spline,
-                base_activation=base_activation,
-                grid_eps=grid_eps,
-                grid_range=grid_range,
-            )
-            self.fc2 = KANLinear(
-                hidden_features,
-                out_features,
-                grid_size=grid_size,
-                spline_order=spline_order,
-                scale_noise=scale_noise,
-                scale_base=scale_base,
-                scale_spline=scale_spline,
-                base_activation=base_activation,
-                grid_eps=grid_eps,
-                grid_range=grid_range,
-            )
-            self.fc3 = KANLinear(
-                hidden_features,
-                out_features,
-                grid_size=grid_size,
-                spline_order=spline_order,
-                scale_noise=scale_noise,
-                scale_base=scale_base,
-                scale_spline=scale_spline,
-                base_activation=base_activation,
-                grid_eps=grid_eps,
-                grid_range=grid_range,
-            )
+            self.fc1 = MoKLayer(in_features, hidden_features, layer_hp)
+            self.fc2 = MoKLayer(hidden_features, out_features, layer_hp)
+            self.fc3 = MoKLayer(hidden_features, out_features, layer_hp)
+
         else:
             self.fc1 = nn.Linear(in_features, hidden_features)
             self.fc2 = nn.Linear(hidden_features, out_features)
